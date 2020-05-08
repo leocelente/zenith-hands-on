@@ -2,7 +2,7 @@
 ## Hands on Project
 This project is intended to familiarize new members with C programming using a fun and interactive project.
 ## Usage
-Build with `make` and type the command `CREATE <W,H>` to start operating on a WxH PGM file. Here is what you can do:
+Build with `make` and type the command `CREATE <W,H>` to start operating on a WxH [PGM file](http://netpbm.sourceforge.net/doc/pgm.html). Here is what you can do:
 
 | Commands |                 Arguments\*                 |
 | -------- | :----------------------------------------: |
