@@ -1,12 +1,12 @@
-SOURCES = main.c engine.c interface.c
+SOURCES = main.c engine.c  slre.c interface.c
 NAME = TerminalPaint
-CC  = clang
+CC  = gcc
 all: 
-	${CC} -o ${NAME} ${SOURCES}
+	${CC} -O3 -o ${NAME} ${SOURCES} 
 debug:
-	${CC} -ggdb3 -DDEBUG -o ${NAME}Debug ${SOURCES}
-	rm -f test.pgm
+	${CC} -ggdb3 -DDEBUG -o ${NAME}Debug ${SOURCES}  
+	rm -f *.pgm
 	./${NAME}Debug
-	xdg-open test.pgm
+	xdg-open *.pgm
 clean:
 	rm -f ./${NAME} ./${NAME}Debug

@@ -21,43 +21,44 @@ int main(int argc, char const *argv[]) {
     LOGD("init_interface", 1);
 
   // begin engine
-    Data data;
-    engine_init(&data);
+    Canvas canvas;
+    engine_init(&canvas);
 
 
   int is_done = 0;
   while (!is_done) {
-    int command = interface_tick(data.args);
+    int command = interface_tick(&canvas);
     switch (command) {
     case EXIT:
       is_done = 1;
       printf("\tExiting...\n");
       break;
     case ERROR:
-      printf("\tNot a valid command");
+      printf("\tUnknown command... try again\n");
     case CREATE:
-      data.args[0] = 120;
-      data.args[1] = 140;
-      engine_create(&data);
+      printf("Resolution: %d x %d", canvas.args[0],canvas.args[1]);
+      engine_create(&canvas);
       break;
     case EXPORT:
-      engine_save(&data);
+      engine_save(&canvas);
       break;
     case POINT:
-        engine_draw_point(&data, data.width/2, data.height/2, 122);
-        engine_draw_point(&data, 0, 0, 180);
+        engine_draw_point(&canvas);
       break;
     case LINE:
-      engine_draw_line(&data, 1,1, 50,50, 1);
+      engine_draw_line(&canvas);
       break;
     case RECT:
-      engine_draw_rectangle(&data, 1,1, 50,50, 50);
+      engine_draw_rectangle(&canvas);
       break;
     case CIRCLE:
-      engine_draw_circle(&data, 120, 140, 10, 80);
+      engine_draw_circle(&canvas);
+      break;
+      case DISK:
+      engine_draw_disk(&canvas);
     }
   }
-  engine_close(&data);
+  engine_close(&canvas);
   //  close
   return 0;
 }

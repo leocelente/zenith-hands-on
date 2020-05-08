@@ -13,11 +13,12 @@
 #include "constants.h"
 #include <memory.h>
 #include <stdio.h>
+#include <stdlib.h>
 
-int engine_init(Data *data) {
-  data->drawing = NULL;
-  data->height = 0;
-  data->width = 0;
+int engine_init(Canvas *canvas) {
+  canvas->pixels = NULL;
+  canvas->height = 0;
+  canvas->width = 0;
   return 1;
 }
 /**
@@ -26,18 +27,18 @@ int engine_init(Data *data) {
  * @param args [width, height]
  * @return int
  */
-int engine_create(Data *data) {
-  data->width = data->args[0];
-  data->height = data->args[1];
-  size_t sz = sizeof(int) * data->width * data->height;
-  data->drawing = malloc(sz);
-  if (data->drawing == NULL) {
-    printf("malloc failed : drawing");
+int engine_create(Canvas *canvas) {
+  canvas->width = canvas->args[0];
+  canvas->height = canvas->args[1];
+  size_t sz = sizeof(int) * canvas->width * canvas->height;
+  canvas->pixels = malloc(sz);
+  if (canvas->pixels == NULL) {
+    printf("malloc failed : pixels");
     return 0;
   }
   for (size_t i = 0; i < sz; ++i) {
     // fills with white
-    data->drawing[i] = 255;
+    canvas->pixels[i] = 255;
   }
   printf("\tCreated\n");
   return 1;
@@ -45,12 +46,12 @@ int engine_create(Data *data) {
 /**
  * @brief saves file
  *
- * @param data
+ * @param canvas
  * @param args [char* filename]
  * @return int
  */
-int engine_save(Data *data) {
-  char *filename = "test.pgm";
+int engine_save(Canvas *canvas) {
+  char *filename = canvas->filename;//"test.pgm";//(char *)canvas->args[0];
   FILE *file_handler = NULL;
   printf("\tCreating %s\n", filename);
   file_handler = fopen(filename, "w+");
@@ -61,14 +62,13 @@ int engine_save(Data *data) {
   // write magic number
   fprintf(file_handler, "P2\n");
   // write height, width
-  fprintf(file_handler, "%d %d\n", data->height, data->width);
+  fprintf(file_handler, "%d %d\n", canvas->height, canvas->width);
   // write scale
   fprintf(file_handler, "%d\n", UINT8_MAX);
-
   // write file contents
-  for (size_t i = 0; i < data->height; ++i) {
-    for (size_t j = 0; j < data->width; ++j) {
-      fprintf(file_handler, " %d ", (data->drawing[i * data->width + j]));
+  for (size_t i = 0; i < canvas->height; ++i) {
+    for (size_t j = 0; j < canvas->width; ++j) {
+      fprintf(file_handler, " %d ", (canvas->pixels[i * canvas->width + j]));
     }
     fprintf(file_handler, "\n");
   }
@@ -76,18 +76,23 @@ int engine_save(Data *data) {
   return 1;
 }
 
-int engine_close(Data *data) {
-  free(data->drawing);
+int engine_close(Canvas *canvas) {
+  free(canvas->pixels);
   return 0;
 }
 
-int engine_draw_point(Data *data, int x, int y, int scale) {
-  if (x <= data->width && y <= data->height) {
+void engine_draw_point(Canvas *canvas) {
+  _engine_draw_point(canvas, canvas->args[0], canvas->args[1], canvas->args[2]);
+}
+int _engine_draw_point(Canvas *canvas, int x, int y, int scale) {
+  if (x < 0 || y < 0)
+    return 0;
+  if (x <= canvas->width && y <= canvas->height) {
     if (scale >= UINT8_MAX)
       scale = 255;
     if (scale <= 0)
       scale = 0;
-    data->drawing[y * data->height + x] = scale;
+    canvas->pixels[y * canvas->height + x] = scale;
     return 1;
   } else {
     printf("\tOut of bounds\n");
@@ -95,8 +100,12 @@ int engine_draw_point(Data *data, int x, int y, int scale) {
   }
 }
 
-int engine_draw_line(Data *data, int x0, int y0, int x1, int y1, int scale) {
-  printf("drawing line");
+void engine_draw_line(Canvas *canvas) {
+  _engine_draw_line(canvas, canvas->args[0], canvas->args[1], canvas->args[2],
+                    canvas->args[3], canvas->args[4]);
+}
+int _engine_draw_line(Canvas *canvas, int x0, int y0, int x1, int y1, int scale) {
+  printf("pixels line");
   int begin_x, end_x, begin_y, end_y;
   if (x0 < x1) {
     begin_x = x0;
@@ -123,46 +132,55 @@ int engine_draw_line(Data *data, int x0, int y0, int x1, int y1, int scale) {
          end_x, end_y);
   for (int x = begin_x; x < end_x; x++) {
     y = begin_y + dy * (x - begin_x) / dx;
-    engine_draw_point(data, x, y, scale);
+    _engine_draw_point(canvas, x, y, scale);
   }
   if (dx == 0) {
     for (int y = begin_y; y <= end_y; ++y) {
-      engine_draw_point(data, begin_x, y, scale);
+      _engine_draw_point(canvas, begin_x, y, scale);
     }
   }
   printf("\n");
   return 1;
 }
 
-int engine_draw_rectangle(Data *data, int x0, int y0, int width, int height,
-                          int scale) {
-  if (x0 + width > data->width)
-    width = data->width - x0;
-  if (y0 + height > data->height)
-    height = data->height - y0;
-  engine_draw_line(data, x0, y0, x0 + width, y0, scale);
-  engine_draw_line(data, x0, y0, x0, y0 + height, scale);
-  engine_draw_line(data, x0 + width, y0, x0 + width, y0 + height, scale);
-  engine_draw_line(data, x0, y0 + height, x0 + width, y0 + height, scale);
+void engine_draw_rectangle(Canvas *canvas) {
+  _engine_draw_rectangle(canvas, canvas->args[0], canvas->args[1], canvas->args[2],
+                         canvas->args[3], canvas->args[4]);
+}
+int _engine_draw_rectangle(Canvas *canvas, int x0, int y0, int width, int height,
+                           int scale) {
+  if (x0 + width > canvas->width)
+    width = canvas->width - x0;
+  if (y0 + height > canvas->height)
+    height = canvas->height - y0;
+  _engine_draw_line(canvas, x0, y0, x0 + width, y0, scale);
+  _engine_draw_line(canvas, x0, y0, x0, y0 + height, scale);
+  _engine_draw_line(canvas, x0 + width, y0, x0 + width, y0 + height, scale);
+  _engine_draw_line(canvas, x0, y0 + height, x0 + width, y0 + height, scale);
 
   return 1;
 }
 
-void drawCircle(Data *data, int xc, int yc, int x, int y, int scale) {
-  engine_draw_point(data, xc + x, yc + y, scale);
-  engine_draw_point(data, xc - x, yc + y, scale);
-  engine_draw_point(data, xc + x, yc - y, scale);
-  engine_draw_point(data, xc - x, yc - y, scale);
-  engine_draw_point(data, xc + y, yc + x, scale);
-  engine_draw_point(data, xc - y, yc + x, scale);
-  engine_draw_point(data, xc + y, yc - x, scale);
-  engine_draw_point(data, xc - y, yc - x, scale);
+void drawCircle(Canvas *canvas, int xc, int yc, int x, int y, int scale) {
+  _engine_draw_point(canvas, xc + x, yc + y, scale);
+  _engine_draw_point(canvas, xc - x, yc + y, scale);
+  _engine_draw_point(canvas, xc + x, yc - y, scale);
+  _engine_draw_point(canvas, xc - x, yc - y, scale);
+  _engine_draw_point(canvas, xc + y, yc + x, scale);
+  _engine_draw_point(canvas, xc - y, yc + x, scale);
+  _engine_draw_point(canvas, xc + y, yc - x, scale);
+  _engine_draw_point(canvas, xc - y, yc - x, scale);
 }
-int engine_draw_circle(Data *data, int center_x, int center_y, int radius,
-                       int scale) {
-  int x = 0, y = radius;
+void engine_draw_circle(Canvas *canvas) {
+  _engine_draw_circle(canvas, canvas->args[0], canvas->args[1], canvas->args[2],
+                      canvas->args[3]);
+}
+int _engine_draw_circle(Canvas *canvas, int center_x, int center_y, int radius,
+                        int scale) {
+  int x = 0;
+  int y = radius;
   int d = 3 - 2 * radius;
-  drawCircle(data, center_x, center_y, x, y, scale);
+  drawCircle(canvas, center_x, center_y, x, y, scale);
   while (y >= x) {
     x++;
     if (d > 0) {
@@ -171,6 +189,27 @@ int engine_draw_circle(Data *data, int center_x, int center_y, int radius,
     } else {
       d = d + 4 * x + 6;
     }
-    drawCircle(data, center_x, center_y, x, y, scale);
+    drawCircle(canvas, center_x, center_y, x, y, scale);
   }
+  return 1;
+}
+
+void engine_draw_disk(Canvas *canvas) {
+  _engine_draw_disk(canvas, canvas->args[0], canvas->args[1], canvas->args[2],
+                    canvas->args[3]);
+}
+int _engine_draw_disk(Canvas *canvas, int center_x, int center_y, int radius,
+                      int scale) {
+  for (int x = center_x - radius; x < center_x + radius; ++x) {
+    for (int y = center_y - radius; y < center_y + radius; ++y) {
+      int dx = center_x - x; // horizontal offset
+      int dy = center_y - y; // vertical offset
+      if ((dx * dx + dy * dy) <= (radius * radius)) {
+        // set pixel color
+        _engine_draw_point(canvas, x, y, scale);
+      }
+    }
+  }
+
+  return 1;
 }

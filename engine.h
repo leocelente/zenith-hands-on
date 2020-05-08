@@ -3,20 +3,33 @@
 #include "constants.h"
 #include <inttypes.h>
 typedef struct {
-  uint8_t *drawing;
+  uint8_t *pixels;
   int height;
   int width;
   int args[MAX_ARG];
-} Data;
+  char filename[100];
+} Canvas;
 
-int engine_init(Data *data);
-int engine_create(Data *data);
-int engine_draw_point(Data *data, int x, int y, int scale);
-int engine_draw_line(Data *data, int x0, int y0, int x1, int y1, int scale);
-int engine_draw_rectangle(Data *data, int x0, int y0, int width, int height,
-                          int scale);
-int engine_draw_circle(Data *data, int center_x, int center_y, int radius,
-                       int scale);
-int engine_save(Data *data);
-int engine_close(Data *data);
+int engine_init(Canvas *canvas);
+int engine_create(Canvas *canvas);
+int _engine_draw_point(Canvas *canvas, int x, int y, int scale);
+void engine_draw_point(Canvas *canvas);
+
+int _engine_draw_line(Canvas *canvas, int x0, int y0, int x1, int y1, int scale);
+void engine_draw_line(Canvas *canvas);
+
+int _engine_draw_rectangle(Canvas *canvas, int x0, int y0, int width, int height,
+                           int scale);
+void engine_draw_rectangle(Canvas *canvas);
+
+int _engine_draw_circle(Canvas *canvas, int center_x, int center_y, int radius,
+                        int scale);
+void engine_draw_circle(Canvas *canvas);
+
+int _engine_draw_disk(Canvas *canvas, int center_x, int center_y, int radius,
+                      int scale);
+void engine_draw_disk(Canvas *canvas);
+
+int engine_save(Canvas *canvas);
+int engine_close(Canvas *canvas);
 #endif

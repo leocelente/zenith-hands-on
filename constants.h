@@ -1,5 +1,5 @@
 #ifndef CONSTANTS_H
-#define CONSTANTS_H
+#define CONSTANTS_H 1
 /**
  * @file constants.h
  * @author Leonardo Celente (@leocelente)
@@ -25,9 +25,10 @@
 
 #define INTERFACE_OK 0
 #define INTERFACE_BAD -1
-enum Commands { ERROR, EXIT, CREATE, EXPORT, POINT, LINE, RECT, CIRCLE };
+#define CMD_COUNT 8
+enum Commands { ERROR= -1, EXIT, CREATE, EXPORT, POINT, LINE, RECT, CIRCLE, DISK };
 /*
     engine.h
-*/
+// */
 
 #endif
