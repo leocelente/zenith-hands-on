@@ -3,9 +3,6 @@
 This project is intended to familiarize new members with C programming using a fun and interactive project.
 ## Usage
 Build with `make` and type the command `CREATE <W,H>` to start operating on a WxH PGM file. Here is what you can do:
-|CREATE <width> <heigth>: Esse comando deve criar uma
-estrutura que permita a manipulação de uma imagem PGM de
-dimensões width x height
 
 | Commands |                 Arguments\*                 |
 | -------- | :----------------------------------------: |
